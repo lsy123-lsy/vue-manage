@@ -31,6 +31,7 @@
 </template>
 <script>
   import {mapActions,mapState} from 'vuex'
+  import {login,getAdminInfo} from '../api/getData'
 
   export default{
     data(){
@@ -60,13 +61,20 @@
     },
     mounted(){
       this.showLogin = true
+      if(!this.adminInfo.id) {
+         this.getAdminData()
+      }
+    },
+    computed:{
+      ...mapState(['adminInfo'])
     },
     methods:{
       async submitForm(formName){
         this.$refs[formName].validate(async (valid) => {
           // 判断校验结果
           if(valid) {
-            const res = await this.loginForm({user_name:this.loginForm.username,password:this.loginForm.password})
+            // 发起login网络请求，
+            const res = await login({user_name:this.loginForm.username,password:this.loginForm.password})
             if(res.status == 1) {
               this.$message({
                 type:'success',
@@ -78,11 +86,29 @@
                 type:'error',
                 message:res.message
               })
+              console.log(res.message);
+              
             }
           }else{
-
+            this.$notify.error({
+              title:'错误',
+              message:'请输入正确的用户名密码',
+              offset:100
+            });
+            return false;
           }
-        })
+        });
+      }
+    },
+    watch:{
+      adminInfo:function(newValue){
+        if(newValue.id){
+          this.$message({
+            type:'success',
+            message:'检测到您之前登陆过，将自动登录'
+          })
+          this.$router.push('manange')
+        }
       }
     }
   }
